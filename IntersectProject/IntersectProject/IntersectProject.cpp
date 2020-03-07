@@ -6,7 +6,7 @@
 #include<algorithm>
 using namespace std;
 typedef long long LL;
-const double eps = 1e-8;
+const double eps = 1e-9;
 const int maxn = 500010;
 
 inline int dcmp(double x) {
@@ -29,7 +29,8 @@ Vector operator + (const Vector& A, const Vector& B) { return Vector(A.x + B.x, 
 Vector operator - (const Vector& A, const Vector& B) { return Vector(A.x - B.x, A.y - B.y); }
 double operator * (const Vector& A, const Vector& B) { return A.x * B.x + A.y * B.y; }
 Point operator * (const Vector& A, const double& p) { return Point(A.x * p, A.y * p); }
-bool operator < (const Point& A, const Point& B) { return A.x < B.x || (A.x == B.x && A.y < B.y); }
+bool operator < (const Point& A, const Point& B) { return dcmp(A.x - B.x) < 0 || (!dcmp(A.x - B.x) && dcmp(A.y - B.y) < 0); }
+bool operator == (const Point& A, const Point& B) { return !dcmp(A.x - B.x) && !dcmp(A.y - B.y); }
 double operator ^ (const Vector& A, const Vector& B) { return A.x * B.y - A.y * B.x; }
 
 struct Line {
@@ -43,6 +44,9 @@ struct Line {
 struct Circle {
 	Point c;
 	double r;
+	Point point(double a) const {
+		return Point(c.x + cos(a) * r, c.y + sin(a) * r);
+	}
 }circle[maxn];
 
 set<Point> s;
@@ -68,7 +72,27 @@ void lineIntersectionWithCircle(const Line& L, const Circle& C) {
 		t1 = (-f - sqrt(delta)) / (2 * e); s.insert(L.point(t1));
 		t2 = (-f + sqrt(delta)) / (2 * e); s.insert(L.point(t2));
 	}
+}
 
+double calLength(Vector x) {
+	return sqrt(x * x);
+}
+
+double angle(Vector vec) {
+	return atan2(vec.y, vec.x);
+}
+
+void circleIntersectionWithCircle(const Circle& C1, const Circle& C2) {
+	double d = calLength(C1.c - C2.c);
+	if (dcmp(d) == 0)  return ;
+	if (dcmp(C1.r + C2.r - d) < 0) return ;
+	if (dcmp(fabs(C1.r - C2.r) - d) > 0) return ;
+	double a = angle(C2.c - C1.c);
+	double da = acos((C1.r * C1.r + d * d - C2.r * C2.r) / (2 * C1.r * d));
+	Point p1 = C1.point(a - da), p2 = C1.point(a + da);
+	s.insert(p1);
+	if (p1 == p2) return ;
+	s.insert(p2);
 }
 
 void solveBasic() {
@@ -79,6 +103,10 @@ void solveBasic() {
 		}
 	for (auto p : s) p.print();
 	//circle & circle
+	for (int i = 1; i <= cnt_c; ++i)
+		for (int j = i + 1; j <= cnt_c; ++j) {
+			circleIntersectionWithCircle(circle[i], circle[j]);
+		}
 	//line & circle
 	for (int i = 1; i <= cnt_l; ++i)
 		for (int j = 1; j <= cnt_c; ++j) {
