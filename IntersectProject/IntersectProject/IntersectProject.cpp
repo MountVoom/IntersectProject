@@ -1,4 +1,5 @@
 ﻿#include<set>
+#include<queue>
 #include<cstdio>
 #include<vector>
 #include<cstdlib>
@@ -20,9 +21,9 @@ struct Point {
 		cin >> x >> y;
 	}
 	void print() {
-		printf("%lf %lf\n", x, y);
+		printf("%.10lf %.10lf\n", x, y);
 	}
-};
+}upperPoint[maxn];
 typedef Point Vector;
 
 Vector operator + (const Vector& A, const Vector& B) { return Vector(A.x + B.x, A.y + B.y); }
@@ -49,14 +50,17 @@ struct Circle {
 	}
 }circle[maxn];
 
+Point globalIntersection;
 set<Point> s;
 int n, cnt_l, cnt_c;
 
-void lineIntersectionWithLine(const Line& L1, const Line& L2) {
-	if (!dcmp(L1.v ^ L2.v)) return;
+int lineIntersectionWithLine(const Line& L1, const Line& L2) {
+	if (!dcmp(L1.v ^ L2.v)) return 0;
 	Vector u = L1.u - L2.u;
 	double t = (L2.v ^ u) / (L1.v ^ L2.v);
-	s.insert(L1.u + L1.v * t);
+	globalIntersection = L1.u + L1.v * t;
+	s.insert(globalIntersection);
+	return 1;
 }
 
 void lineIntersectionWithCircle(const Line& L, const Circle& C) {
@@ -115,8 +119,112 @@ void solveBasic() {
 	printf("%d\n", s.size());
 }
 
-void scanLine() {
+struct Node {
+	Point x;
+	int id, tp;//0->up 1->down <0 -> intersec (line_{id} & line_{-tp})
+	Node(Point x, int id, int tp) : x(x), id(id), tp(tp) { }
+	bool operator < (const Node& A) const {
+		if (!dcmp(x.y - A.x.y)) {
+			if (!dcmp(x.x - A.x.x)) {
+				return tp > A.tp;
+			}
+			return dcmp(x.x - A.x.x) > 0;
+		}
+		return dcmp(x.y - A.x.y) < 0;
+	}
+};
 
+struct Node2 {
+	Point x;
+	int id;
+	Node2(Point x, int id) :x(x), id(id) {}
+	bool operator < (const Node2& A) const {
+		return !dcmp(x.x - A.x.x) ? dcmp(x.y - A.x.y) > 0 : dcmp(x.x - A.x.x) < 0;
+	}
+};
+priority_queue<Node> pq;
+set<Node2> tree;
+
+double calY(const Point& A, const Point& B, double x) {
+	//(x - A.x) * (y - B.y) = (x - B.x) * (y - A.y)
+	double k1 = x - A.x, k2 = x - B.x;
+	return (k1 * B.y - k2 * A.y) / (k1 - k2);
+}
+
+void getPoints() {
+	Point B;
+	double lx = -1e11, rx = 1e11, ly, ry;
+	for (int i = 1; i <= cnt_l; ++i) {
+		B = line[i].u + line[i].v;
+		if (!dcmp(line[i].u.x - B.x)) {
+			pq.push(Node(Point(B.x, rx), i, 0));
+			pq.push(Node(Point(B.x, lx), i, 1));
+			upperPoint[i] = Point(B.x, rx);
+		}
+		else {
+			ly = calY(line[i].u, B, lx);
+			ry = calY(line[i].u, B, rx);
+			if (dcmp(ly - ry) >= 0) {
+				pq.push(Node(Point(lx, ly), i, 0));
+				pq.push(Node(Point(rx, ry), i, 1));
+				upperPoint[i] = Point(lx, ly);
+			}
+			else {
+				pq.push(Node(Point(lx, ly), i, 1));
+				pq.push(Node(Point(rx, ry), i, 0));
+				upperPoint[i] = Point(rx, ry);
+			}
+		}
+	}
+}
+
+void updateInsertion(int x, int y) {
+	if (lineIntersectionWithLine(line[x], line[y])) {
+		pq.push(Node(globalIntersection, x, -y));
+	}
+}
+
+void scanLine() {
+	getPoints();
+	while (!pq.empty()) {
+		auto node = pq.top(); pq.pop();
+		if (node.tp == 0) {
+			auto node2 = Node2(node.x, node.id);
+			tree.insert(node2);
+			auto it = tree.find(node2);
+			if (it != tree.begin()) {
+				updateInsertion(prev(it)->id, it->id);
+			}
+			if (next(it) != tree.end()) {
+				updateInsertion(next(it)->id, it->id);
+			}
+		}
+		else if (node.tp == 1) {
+			auto node2 = Node2(upperPoint[node.id], node.id);
+			auto it = tree.find(node2);
+			if (it != tree.begin() && next(it) != tree.end()) {
+				updateInsertion(prev(it)->id, next(it)->id);
+			}
+			tree.erase(it);
+		}
+		else {
+			//node.id -> pl -node.tp -> pr
+			auto pl = Node2(upperPoint[node.id], node.id);
+			auto pr = Node2(upperPoint[-node.tp], -node.tp);
+			if (dcmp(pl.x.x - pr.x.x) > 0) {
+				swap(pl, pr);
+			}
+			auto itl = tree.find(pl);
+			auto itr = tree.find(pr);
+			if (itl != tree.begin()) {
+				updateInsertion(prev(itl)->id, itr->id);
+			}
+			if (next(itr) != tree.end()) {
+				updateInsertion(itl->id, next(itr)->id);
+			}
+		}
+	}
+	printf("%d\n", s.size());
 }
 
 int main()
@@ -139,7 +247,7 @@ int main()
 			cin >> circle[cnt_c].r;
 		}
 	}
-	if (n <= 1000) {
+	if (n <= 1) {
 		solveBasic();
 	}
 	else {
