@@ -49,7 +49,7 @@ namespace IntersectProjectUnitTest
 			C = Circle(Point(3, 3), sqrt(2.));
 			lineIntersectionWithCircle(L, C);
 			Assert::AreEqual((int)s.size(), (int)2);
-			s.insert(Point(4, 4)); s.insert(Point(4, 4));
+			s.insert(Point(2, 2)); s.insert(Point(4, 4));
 			Assert::AreEqual((int)s.size(), (int)2);
 
 		}
