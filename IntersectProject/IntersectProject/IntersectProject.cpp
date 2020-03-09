@@ -14,7 +14,7 @@ void lineIntersectionWithCircle(const Line& L, const Circle& C) {
 	double a = L.v.x, b = L.u.x - C.c.x, c = L.v.y, d = L.u.y - C.c.y;
 	double e = a * a + c * c, f = 2 * (a * b + c * d), g = b * b + d * d - C.r * C.r;
 	double delta = f * f - 4 * e * g;
-	if (dcmp(delta) < 0) return ;
+	if (dcmp(delta) < 0) return;
 	if (dcmp(delta) == 0) {
 		s.insert(L.point(-f / (2 * e)));
 	}
@@ -34,14 +34,14 @@ double angle(Vector vec) {
 
 void circleIntersectionWithCircle(const Circle& C1, const Circle& C2) {
 	double d = calLength(C1.c - C2.c);
-	if (dcmp(d) == 0)  return ;
-	if (dcmp(C1.r + C2.r - d) < 0) return ;
-	if (dcmp(fabs(C1.r - C2.r) - d) > 0) return ;
+	if (dcmp(d) == 0)  return;
+	if (dcmp(C1.r + C2.r - d) < 0) return;
+	if (dcmp(fabs(C1.r - C2.r) - d) > 0) return;
 	double a = angle(C2.c - C1.c);
 	double da = acos((C1.r * C1.r + d * d - C2.r * C2.r) / (2 * C1.r * d));
 	Point p1 = C1.point(a - da), p2 = C1.point(a + da);
 	s.insert(p1);
-	if (p1 == p2) return ;
+	if (p1 == p2) return;
 	s.insert(p2);
 }
 
@@ -51,7 +51,6 @@ int solveBasic() {
 		for (int j = i + 1; j <= cnt_l; ++j) {
 			lineIntersectionWithLine(line[i], line[j]);
 		}
-	for (auto p : s) p.print();
 	//circle & circle
 	for (int i = 1; i <= cnt_c; ++i)
 		for (int j = i + 1; j <= cnt_c; ++j) {
@@ -98,9 +97,14 @@ void getPoints() {
 	}
 }
 
+set<pii> has;
+
 void updateInsertion(int x, int y) {
 	if (lineIntersectionWithLine(line[x], line[y])) {
-		pq.push(Node(globalIntersection, x, -y));
+		if (has.find(mp(x, y)) == has.end()) {
+			has.insert(mp(x, y));
+			pq.push(Node(globalIntersection, x, -y));
+		}
 	}
 }
 
@@ -116,7 +120,7 @@ int scanLine() {
 				updateInsertion(prev(it)->id, it->id);
 			}
 			if (next(it) != tree.end()) {
-				updateInsertion(next(it)->id, it->id);
+				updateInsertion(it->id, next(it)->id);
 			}
 		}
 		else if (node.tp == 1) {
@@ -131,9 +135,6 @@ int scanLine() {
 			//node.id -> pl -node.tp -> pr
 			auto pl = Node2(upperPoint[node.id], node.id);
 			auto pr = Node2(upperPoint[-node.tp], -node.tp);
-			if (dcmp(pl.x.x - pr.x.x) > 0) {
-				swap(pl, pr);
-			}
 			auto itl = tree.find(pl);
 			auto itr = tree.find(pr);
 			if (itl != tree.begin()) {
@@ -167,7 +168,7 @@ int main()
 			cin >> circle[cnt_c].r;
 		}
 	}
-	if (n <= 1) {
+	if (n <= 1000) {
 		printf("%d\n", solveBasic());
 	}
 	else {

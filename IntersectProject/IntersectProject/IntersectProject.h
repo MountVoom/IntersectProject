@@ -6,6 +6,8 @@
 #include<cstdlib>
 #include<iostream>
 #include<algorithm>
+#define mp make_pair
+#define pii pair<int, int>
 using namespace std;
 typedef long long LL;
 const double eps = 1e-9;
@@ -24,6 +26,7 @@ struct Point {
 	void print() {
 		printf("%.10lf %.10lf\n", x, y);
 	}
+	bool operator < (const Point& B) const { return dcmp(x - B.x) < 0 || (!dcmp(x - B.x) && dcmp(y - B.y) < 0); }
 }upperPoint[maxn];
 typedef Point Vector;
 
@@ -31,7 +34,6 @@ Vector operator + (const Vector& A, const Vector& B) { return Vector(A.x + B.x, 
 Vector operator - (const Vector& A, const Vector& B) { return Vector(A.x - B.x, A.y - B.y); }
 double operator * (const Vector& A, const Vector& B) { return A.x * B.x + A.y * B.y; }
 Point operator * (const Vector& A, const double& p) { return Point(A.x * p, A.y * p); }
-bool operator < (const Point& A, const Point& B) { return dcmp(A.x - B.x) < 0 || (!dcmp(A.x - B.x) && dcmp(A.y - B.y) < 0); }
 bool operator == (const Point& A, const Point& B) { return !dcmp(A.x - B.x) && !dcmp(A.y - B.y); }
 double operator ^ (const Vector& A, const Vector& B) { return A.x * B.y - A.y * B.x; }
 
