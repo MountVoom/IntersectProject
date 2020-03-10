@@ -10,7 +10,7 @@
 #define pii pair<int, int>
 using namespace std;
 typedef long long LL;
-const double eps = 1e-9;
+const double eps = 1e-12;
 const int maxn = 500010;
 
 inline int dcmp(double x) {
@@ -27,7 +27,7 @@ struct Point {
 		printf("%.10lf %.10lf\n", x, y);
 	}
 	bool operator < (const Point& B) const { return dcmp(x - B.x) < 0 || (!dcmp(x - B.x) && dcmp(y - B.y) < 0); }
-}upperPoint[maxn];
+}leftPoint[maxn];
 typedef Point Vector;
 
 Vector operator + (const Vector& A, const Vector& B) { return Vector(A.x + B.x, A.y + B.y); }
@@ -67,16 +67,16 @@ int n, cnt_l, cnt_c;
 
 struct Node {
 	Point x;
-	int id, tp;//0->up 1->down <0 -> intersec (line_{id} & line_{-tp})
+	int id, tp;//0->left 1->down <right -> intersec (line_{id} & line_{-tp})
 	Node(Point x, int id, int tp) : x(x), id(id), tp(tp) { }
 	bool operator < (const Node& A) const {
-		if (!dcmp(x.y - A.x.y)) {
-			if (!dcmp(x.x - A.x.x)) {
+		if (!dcmp(x.x - A.x.x)) {
+			if (!dcmp(x.y - A.x.y)) {
 				return tp > A.tp;
 			}
-			return dcmp(x.x - A.x.x) > 0;
+			return dcmp(x.y - A.x.y) < 0;
 		}
-		return dcmp(x.y - A.x.y) < 0;
+		return dcmp(x.x - A.x.x) > 0;
 	}
 };
 
@@ -85,7 +85,7 @@ struct Node2 {
 	int id;
 	Node2(Point x, int id) :x(x), id(id) {}
 	bool operator < (const Node2& A) const {
-		return !dcmp(x.x - A.x.x) ? dcmp(x.y - A.x.y) > 0 : dcmp(x.x - A.x.x) < 0;
+		return !dcmp(x.y - A.x.y) ? dcmp(x.x - A.x.x) > 0 : dcmp(x.y - A.x.y) < 0;
 	}
 };
 priority_queue<Node> pq;
